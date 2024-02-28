@@ -47,7 +47,15 @@ class WordDisplayApp(QMainWindow):
         self.timer.stop()
 
     def stopDisplaying(self):
+        with open('info.txt', 'r') as f:
+            old_data = f.read()
+        new_data = old_data.replace('0', str(self.word_index))
+
+        with open('info.txt', 'w') as f:
+            f.write(new_data)
         self.timer.stop()
+        print('stop')
+        sys.exit()
 
     def showNextWord(self):
         if (self.word_index < len(self.words)):
@@ -63,20 +71,15 @@ class WordDisplayApp(QMainWindow):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Space:
             if not self.paused:
-                self.layoutText()
                 self.timer.stop()
 
                 self.paused = True
             else:
                 self.showNextWord()
                 self.paused = False
+        if event.key() == Qt.Key_F1:
+            self.stopDisplaying()
 
-    def layoutText(self):
-        layout = QVBoxLayout()
-        label = QLabel("Этот текст будет отображен на весь экран")
-        label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(label)
-        self.setLayout(layout)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
