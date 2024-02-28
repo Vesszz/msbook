@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget
 from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QFont
+import time
 
 class WordDisplayApp(QMainWindow):
     def __init__(self):
@@ -31,6 +32,7 @@ class WordDisplayApp(QMainWindow):
         self.word_index = 0
         self.timer_interval = interval
         self.paused = False
+        self.timer.start(3000)
         self.showNextWord()
 
     def stopDisplaying(self):
@@ -50,16 +52,20 @@ class WordDisplayApp(QMainWindow):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Space:
             if not self.paused:
-                words_str = words[self.word_index -3] + ' ' + words[self.word_index -2] + ' ' +  words[self.word_index -1]
-                self.label.setText(words_str)
+                self.layaoutText()
                 self.timer.stop()
+
                 self.paused = True
-                print('1')
             else:
                 self.showNextWord()
                 self.paused = False
-                print('2')
 
+    def layaoutText(self):
+        layout = QVBoxLayout()
+        label = QLabel("Этот текст будет отображен на весь экран")
+        label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(label)
+        self.setLayout(layout)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
@@ -68,16 +74,24 @@ if __name__ == '__main__':
     s = file.read()
     zxc = s.split()
     words = []
-    sigma = 'НенеНоноИиАаСсВвУу'
-    for i in range(len(zxc) - 1):
-        if zxc[i] in sigma:
-            words.append(zxc[i] + ' ' + zxc[i + 1])
 
-        elif len(zxc) == i + 2:
-            words.append(zxc[i])
-            words.append(zxc[i + 1])
+    i = 0
+    while i < len(zxc):
+        current_word = zxc[i]
+
+        if len(current_word) < 4:
+            if i + 1 < len(zxc):
+                next_word = zxc[i + 1]
+                combined_word = current_word + ' ' + next_word
+                words.append(combined_word)
+                i += 1
         else:
-            words.append(zxc[i])
+            words.append(current_word)
+
+        i += 1
+
+    if len(zxc) % 2 != 0:
+        words.append(zxc[-1])
     interval = 350  # Интервал между словами в миллисекундах
     window.startDisplaying(words, interval)
     window.show()
