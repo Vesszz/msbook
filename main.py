@@ -15,6 +15,20 @@ import time
 процент книги
 '''
 
+global book
+global log 
+log = True #Логгать или нет
+
+class Book():
+    def __init__(self, name: str, author: str, word_index: int, words: list):
+        self.name = name
+        self.author = author
+        self.word_index = word_index
+        self.words = words
+
+    def __str__(self):
+        return str(self.name + ";" + self.author + ";" + str(self.word_index))
+
 class WordDisplayApp(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -35,29 +49,24 @@ class WordDisplayApp(QMainWindow):
         self.label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.label)
 
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.showNextWord)
 
-    def startDisplaying(self, words, interval, word_index):
-        self.words = words
-        self.word_index = word_index
+
+    def startDisplaying(self, interval):
+        self.words = book.words
+        self.word_index = book.word_index
         self.timer_interval = interval
         self.paused = True
-        self.timer.start(3000)  ##
-        self.timer.stop()
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.showNextWord)
+        #self.timer.start(3000)  ##
 
     def stopDisplaying(self):
-        with open('info.txt', 'r') as f:
-            old_data = f.read()
-        new_data = old_data.replace('0', str(self.word_index))
-
-        with open('info.txt', 'w') as f:
-            f.write(new_data)
-        self.timer.stop()
-        print('stop')
+        save(book, self.word_index)
         sys.exit()
 
     def showNextWord(self):
+        save(book, self.word_index)
+        print(self.word_index)
         if (self.word_index < len(self.words)):
             word = self.words[self.word_index]
             self.label.setText(word)
@@ -72,13 +81,23 @@ class WordDisplayApp(QMainWindow):
         if event.key() == Qt.Key_Space:
             if not self.paused:
                 self.timer.stop()
-
                 self.paused = True
             else:
                 self.showNextWord()
                 self.paused = False
         if event.key() == Qt.Key_F1:
             self.stopDisplaying()
+
+# надо переработать и не сохранять каждую секунду
+def save(book: Book, word_index: int):
+    global log
+    print(word_index)
+    with open('info.txt', 'r', encoding='utf-8') as f:
+        old_data = f.read()
+
+    new_data = old_data.replace(book.name+";"+book.author+";"+str(word_index-1), book.name+";"+book.author+";"+str(word_index), 1)
+    with open('info.txt', 'w', encoding='utf-8') as f: f.write(new_data)
+    if log: print("saved")
 
 
 if __name__ == '__main__':
@@ -89,7 +108,6 @@ if __name__ == '__main__':
     book_path = '.books/' + book_name_input + ".txt"
     pre_words = open(book_path, encoding='UTF-8').read().split()
     words = []
-    window = WordDisplayApp()
     i = 0
     while i < len(pre_words):
         current_word = pre_words[i]
@@ -112,11 +130,14 @@ if __name__ == '__main__':
         if len(book_info.replace("\n","").split(";")) != 3: print("Неизвестная ошибка")
         else: 
             book_name, book_author, book_word_index = book_info.split(";")
-            print(book_name, book_author, book_word_index)
-            if book_name == book_name_input + ".txt": word_index = int(book_word_index)
-
-        
+            if book_name == book_name_input + ".txt": 
+                word_index = int(book_word_index)
+                book_selected = Book(book_name,book_author,word_index,words)
+    
+    book = book_selected
+    print(book.word_index) 
+    window = WordDisplayApp()
     interval = 350  # Интервал между словами в миллисекундах
-    window.startDisplaying(words, interval, word_index)
+    window.startDisplaying(interval)
     window.show()
     sys.exit(app.exec_())
