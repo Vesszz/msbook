@@ -1,6 +1,6 @@
 import sys
 import os
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget, QPushButton
 from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QFont
 import time
@@ -17,6 +17,8 @@ class Book():
         self.author = author
         self.word_index = word_index
         self.words = words
+
+
 
     def __str__(self):
         return str(self.name + ";" + self.author + ";" + str(self.word_index))
@@ -41,13 +43,50 @@ class WordDisplayApp(QMainWindow):
         self.label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.label)
 
+        self.button_pause = QPushButton('▶', self)
+        self.button_pause.clicked.connect(self.pause_button_clicked)
+        self.button_pause.setCheckable(True)
+
+
+        screen_size = QApplication.primaryScreen().size()
+        self.button_pause.resize(250, 50)  # размер кнопки паузы
+        button_pause_size = self.button_pause.sizeHint() # читаем размер кнопки сука работай
+        self.button_pause.move(int((screen_size.width() - 250) / 2), int((screen_size.height() - button_pause_size.height()) / 2 + 200))
+        self.button_pause.setStyleSheet("background-color: black; color: white;")
+        self.button_pause.setStyleSheet("font-family: Times New Roman;font-size: 36pt;")
+        self.button_pause.show()
+
+        self.button_exit = QPushButton('×', self)
+        self.button_exit.clicked.connect(self.exit_button_clicked)
+        self.button_exit.setCheckable(True)
+
+
+        self.button_exit.resize(50, 50)  # размер кнопки паузы
+        button_exit_size = self.button_exit.sizeHint()  # читаем размер кнопки сука работай
+        self.button_exit.move(screen_size.width() - 50 - 10, 10)
+        self.button_exit.setStyleSheet("background-color: black; color: white;")
+        self.button_exit.setStyleSheet("font-family: Times New Roman;font-size: 36pt;")
+        self.button_exit.show()
+# Книга.txt
+    def pause_button_clicked(self):
+        if self.button_pause.isChecked():  # Проверяем, нажата ли кнопка
+            self.button_pause.setStyleSheet("font-family: Times New Roman;font-size: 36pt;")
+            self.showNextWord()
+            self.paused = True
+        else:
+            self.button_pause.setStyleSheet("font-family: Times New Roman;font-size: 36pt;")
+            self.timer.stop()
+            self.paused = False
+    def exit_button_clicked(self):
+        if not self.button_pause.isChecked():  # Проверяем, нажата ли кнопка
+            self.stopDisplaying()
 
 
     def startDisplaying(self, interval):
         self.words = book.words
         self.word_index = book.word_index
         self.timer_interval = interval
-        self.paused = True
+        self.paused = False
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.showNextWord)
         #self.timer.start(3000)  ##
@@ -103,6 +142,8 @@ class WordDisplayApp(QMainWindow):
             self.arrow(shift=1)
 
 # надо переработать и не сохранять каждую секунду
+
+
 def save(book: Book, word_index: int):
     global log
     with open('info.txt', 'r', encoding='utf-8') as f: old_data = f.read()
@@ -180,7 +221,7 @@ def setup():
     
     book = book_selected
     window = WordDisplayApp()
-    interval = 200  # Интервал между словами в миллисекундах
+    interval = 555  # Интервал между словами в миллисекундах
     window.startDisplaying(interval)
     window.show()
     sys.exit(app.exec_())
